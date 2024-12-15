@@ -1,12 +1,17 @@
--- Handles assaignment of segments to routes and vice versa
--- Modifikation of id are not allowed!
--- https://www.sqlite.org/lang_createtrigger.html
+-- Handles assignment of segments to routes and vice versa
+-- Modification of IDs is not allowed!
+-- Refer to: https://www.sqlite.org/lang_createtrigger.html
 
+
+/*
+TRIGGERS OF SEGMENTS
+*/
 DROP TRIGGER IF EXISTS segments_insert_edit;
 CREATE TRIGGER segments_insert_edit 
 AFTER INSERT ON segments
 WHEN (SELECT value FROM config WHERE key='execute_triggers')='true'
 BEGIN
+  -- Insert existing relation of segment to route if segment is created by a split operation
   INSERT INTO route_segments (
     id,
     route_id, 
@@ -22,7 +27,7 @@ BEGIN
     FROM route_segments rs
     WHERE NEW.id != NEW.old_id AND rs.segment_id = NEW.old_id;
 
-  -- check if segment is new, from split or merge operation
+  -- Updating route_segments triggers update of route(geom)
   UPDATE route_segments 
     SET segment_id = NEW.id
   WHERE segment_id = NEW.id;
@@ -35,10 +40,12 @@ END;
 
 -- Only execute trigger if action is relevant for route(geom) -> OF geom
 -- This avoids circular triggers when updating attributes of segments
+-- Also execute if id changes to update old_id
 CREATE TRIGGER segments_update_edit 
-AFTER UPDATE OF geom ON segments
+AFTER UPDATE OF id, geom ON segments
 WHEN (SELECT value FROM config WHERE key='execute_triggers')='true'
 BEGIN
+  -- Updating route_segments triggers update of route(geom)
   UPDATE route_segments
     SET segment_id = NEW.id
   WHERE segment_id IN (OLD.id, NEW.id);
@@ -47,15 +54,9 @@ BEGIN
     WHERE id IN (OLD.id, NEW.id);
 END;
 
-CREATE TRIGGER segments_delete_edit 
-AFTER DELETE ON segments
-BEGIN
-  DELETE FROM route_segments
-  WHERE segment_id = OLD.id;
-  -- update of route(geom) is handled by route_segments trigger
-END;
-
-
+/*
+TRIGGERS OF ROUTE_SEGMENTS
+*/
 CREATE TRIGGER route_segements_insert_edit 
 AFTER INSERT ON route_segments
 WHEN (SELECT value FROM config WHERE key='execute_triggers')='true'
@@ -98,5 +99,4 @@ BEGIN
 END;
 
 
-
--- AVOID TRIGGERS ON ROUTE, THEY CAN EASILY LEAD TO CIRCULAR TRIGGERS! 
+-- AVOID TRIGGERS ON ROUTE, THEY CAN LEAD TO CIRCULAR TRIGGERS! 
