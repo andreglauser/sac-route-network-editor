@@ -1,102 +1,102 @@
--- Handles assignment of segments to routes and vice versa
+-- Handles assignment of segment to section and vice versa
 -- Modification of IDs is not allowed!
 -- Refer to: https://www.sqlite.org/lang_createtrigger.html
 
 
 /*
-TRIGGERS OF SEGMENTS
+TRIGGERS OF segment
 */
-DROP TRIGGER IF EXISTS segments_insert_edit;
-CREATE TRIGGER segments_insert_edit 
-AFTER INSERT ON segments
+DROP TRIGGER IF EXISTS segment_insert_edit;
+CREATE TRIGGER segment_insert_edit 
+AFTER INSERT ON segment
 WHEN (SELECT value FROM config WHERE key='execute_triggers')='true'
 BEGIN
-  -- Insert existing relation of segment to route if segment is created by a split operation
-  INSERT INTO route_segments (
+  -- Insert existing relation of segment to section if segment is created by a split operation
+  INSERT INTO section_segment (
     id,
-    route_id, 
+    section_id, 
     segment_id, 
     created_at, 
     created_by) 
     SELECT 
       CreateUUID(),
-      rs.route_id, 
+      rs.section_id, 
       NEW.id, 
       NEW.created_at, 
       NEW.created_by
-    FROM route_segments rs
+    FROM section_segment rs
     WHERE NEW.id != NEW.old_id AND rs.segment_id = NEW.old_id;
 
-  -- Updating route_segments triggers update of route(geom)
-  UPDATE route_segments 
+  -- Updating section_segment triggers update of section(geom)
+  UPDATE section_segment 
     SET segment_id = NEW.id
   WHERE segment_id = NEW.id;
-  -- update of route(geom) is handled by route_segments trigger
+  -- update of section(geom) is handled by section_segment trigger
 
   -- synchronize old_id with id, so next eidting action can be detected
-  UPDATE segments SET old_id = id
+  UPDATE segment SET old_id = id
     WHERE id = NEW.id;
 END;
 
--- Only execute trigger if action is relevant for route(geom) -> OF geom
--- This avoids circular triggers when updating attributes of segments
+-- Only execute trigger if action is relevant for section(geom) -> OF geom
+-- This avoids circular triggers when updating attributes of segment
 -- Also execute if id changes to update old_id
-CREATE TRIGGER segments_update_edit 
-AFTER UPDATE OF id, geom ON segments
+CREATE TRIGGER segment_update_edit 
+AFTER UPDATE OF id, geom ON segment
 WHEN (SELECT value FROM config WHERE key='execute_triggers')='true'
 BEGIN
-  -- Updating route_segments triggers update of route(geom)
-  UPDATE route_segments
+  -- Updating section_segment triggers update of section(geom)
+  UPDATE section_segment
     SET segment_id = NEW.id
   WHERE segment_id IN (OLD.id, NEW.id);
-  -- update of route(geom) is handled by route_segments trigger
-  UPDATE segments SET old_id = id
+  -- update of section(geom) is handled by section_segment trigger
+  UPDATE segment SET old_id = id
     WHERE id IN (OLD.id, NEW.id);
 END;
 
 /*
-TRIGGERS OF ROUTE_SEGMENTS
+TRIGGERS OF section_segment
 */
-CREATE TRIGGER route_segements_insert_edit 
-AFTER INSERT ON route_segments
+CREATE TRIGGER section_segements_insert_edit 
+AFTER INSERT ON section_segment
 WHEN (SELECT value FROM config WHERE key='execute_triggers')='true'
 BEGIN
-  UPDATE routes SET geom = (
+  UPDATE section SET geom = (
     SELECT CastToMultiLinestring(ST_LineMerge(st_union(s.geom)))
-    FROM route_segments rs 
-    LEFT JOIN segments s ON rs.segment_id = s.id 
-    WHERE rs.route_id = routes.id
+    FROM section_segment rs 
+    LEFT JOIN segment s ON rs.segment_id = s.id 
+    WHERE rs.section_id = section.id
   )
-  WHERE id = NEW.route_id;
+  WHERE id = NEW.section_id;
 END;
 
--- Only execute trigger if action is relevant for route(geom) -> OF route_id, segment_id
--- This avoids circular triggers when updating attributes of route_segments
-CREATE TRIGGER route_segements_update_edit 
-AFTER UPDATE OF route_id, segment_id ON route_segments
+-- Only execute trigger if action is relevant for section(geom) -> OF section_id, segment_id
+-- This avoids circular triggers when updating attributes of section_segment
+CREATE TRIGGER section_segements_update_edit 
+AFTER UPDATE OF section_id, segment_id ON section_segment
 WHEN (SELECT value FROM config WHERE key='execute_triggers')='true'
 BEGIN
-  UPDATE routes SET geom = (
+  UPDATE section SET geom = (
     SELECT CastToMultiLinestring(ST_LineMerge(st_union(s.geom)))
-    FROM route_segments rs 
-    LEFT JOIN segments s ON rs.segment_id = s.id 
-    WHERE rs.route_id = routes.id
+    FROM section_segment rs 
+    LEFT JOIN segment s ON rs.segment_id = s.id 
+    WHERE rs.section_id = section.id
   )
-  WHERE id IN (OLD.route_id, NEW.route_id);
+  WHERE id IN (OLD.section_id, NEW.section_id);
 END;
 
-CREATE TRIGGER route_segements_delete_edit 
-AFTER DELETE ON route_segments
+CREATE TRIGGER section_segements_delete_edit 
+AFTER DELETE ON section_segment
 WHEN (SELECT value FROM config WHERE key='execute_triggers')='true'
 BEGIN
-  UPDATE routes SET geom = (
+  UPDATE section SET geom = (
     SELECT CastToMultiLinestring(ST_LineMerge(st_union(s.geom)))
-    FROM route_segments rs 
-    LEFT JOIN segments s ON rs.segment_id = s.id 
-    WHERE rs.route_id = routes.id
+    FROM section_segment rs 
+    LEFT JOIN segment s ON rs.segment_id = s.id 
+    WHERE rs.section_id = section.id
   )
-  WHERE id = OLD.route_id;
+  WHERE id = OLD.section_id;
 END;
 
 
--- AVOID TRIGGERS ON ROUTE, THEY CAN LEAD TO CIRCULAR TRIGGERS! 
+-- AVOID TRIGGERS ON section, THEY CAN LEAD TO CIRCULAR TRIGGERS! 

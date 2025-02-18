@@ -1,8 +1,8 @@
 -- See base.sql for explination of basic attributes
 SELECT load_extension('mod_spatialite');
 
-DROP TABLE IF EXISTS segments;
-CREATE TABLE segments (
+DROP TABLE IF EXISTS segment;
+CREATE TABLE segment (
   fid INTEGER PRIMARY KEY AUTOINCREMENT,
   id TEXT NOT NULL UNIQUE,
   
@@ -21,11 +21,11 @@ CREATE TABLE segments (
   updated_by TEXT
 );
 
-SELECT AddGeometryColumn( 'segments' , 'geom' , 2056 , 'LINESTRING' , 'XYZ', 1);
-SELECT CreateSpatialIndex( 'segments' , 'geom' );
+SELECT AddGeometryColumn( 'segment' , 'geom' , 2056 , 'LINESTRING' , 'XYZ', 1);
+SELECT CreateSpatialIndex( 'segment' , 'geom' );
 
-DROP TABLE IF EXISTS routes;
-CREATE TABLE routes (
+DROP TABLE IF EXISTS section;
+CREATE TABLE section (
   fid INTEGER PRIMARY KEY AUTOINCREMENT,
   id TEXT NOT NULL UNIQUE,
   
@@ -39,15 +39,15 @@ CREATE TABLE routes (
 );
 
 -- initali the geometry can be NULL, geometry will be managed by trigger
-SELECT AddGeometryColumn( 'routes' , 'geom' , 2056 , 'MULTILINESTRING' , 'XYZ', 0);
-SELECT CreateSpatialIndex( 'routes' , 'geom' );
+SELECT AddGeometryColumn( 'section' , 'geom' , 2056 , 'MULTILINESTRING' , 'XYZ', 0);
+SELECT CreateSpatialIndex( 'section' , 'geom' );
 
-DROP TABLE IF EXISTS route_segments;
-CREATE TABLE route_segments (
+DROP TABLE IF EXISTS section_segment;
+CREATE TABLE section_segment (
   fid INTEGER PRIMARY KEY AUTOINCREMENT,
   id TEXT NOT NULL UNIQUE,
 
-  route_id TEXT NOT NULL,
+  section_id TEXT NOT NULL,
   segment_id TEXT NOT NULL,
   
   name TEXT,
@@ -58,22 +58,22 @@ CREATE TABLE route_segments (
   updated_at TEXT,
   updated_by TEXT,
 
-  --each segement can only be used once in a route
-  UNIQUE(route_id, segment_id),
+  --each segement can only be used once in a section
+  UNIQUE(section_id, segment_id),
 
-  CONSTRAINT route_segments_route_id_fk
-    FOREIGN KEY(route_id) 
-    REFERENCES routes(id)
+  CONSTRAINT section_segment_section_id_fk
+    FOREIGN KEY(section_id) 
+    REFERENCES section(id)
     ON UPDATE CASCADE 
     ON DELETE CASCADE
     DEFERRABLE INITIALLY DEFERRED,
 
-  CONSTRAINT route_segments_segment_id_fk
+  CONSTRAINT section_segment_segment_id_fk
       FOREIGN KEY(segment_id)
-      REFERENCES segments(id)
+      REFERENCES segment(id)
       ON UPDATE CASCADE
       ON DELETE RESTRICT
       DEFERRABLE INITIALLY DEFERRED
 );
 
-CREATE UNIQUE INDEX route_segments_idx ON route_segments(route_id, segment_id);
+CREATE UNIQUE INDEX section_segment_idx ON section_segment(section_id, segment_id);
