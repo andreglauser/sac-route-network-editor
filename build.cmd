@@ -1,4 +1,6 @@
+@echo off
 call "C:\OSGeo4W\bin\o4w_env.bat"
+@echo on
 
 if exist build\route-editor.sqlite (
     del build\route-editor.sqlite

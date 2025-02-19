@@ -1,6 +1,24 @@
 -- See base.sql for explination of basic attributes
 SELECT load_extension('mod_spatialite');
 
+DROP TABLE IF EXISTS route;
+CREATE TABLE route (
+  fid INTEGER PRIMARY KEY AUTOINCREMENT,
+  id TEXT NOT NULL UNIQUE,
+  
+  name TEXT,
+  description TEXT,
+  
+  created_at TEXT,
+  created_by TEXT,
+  updated_at TEXT,
+  updated_by TEXT
+);
+
+-- initali the geometry can be NULL, geometry will be managed by trigger
+SELECT AddGeometryColumn( 'route' , 'geom' , 2056 , 'MULTILINESTRING' , 'XYZ', 0);
+SELECT CreateSpatialIndex( 'route' , 'geom' );
+
 DROP TABLE IF EXISTS segment;
 CREATE TABLE segment (
   fid INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -29,13 +47,21 @@ CREATE TABLE section (
   fid INTEGER PRIMARY KEY AUTOINCREMENT,
   id TEXT NOT NULL UNIQUE,
   
+  route_id TEXT NOT NULL,
   name TEXT,
   description TEXT,
   
   created_at TEXT,
   created_by TEXT,
   updated_at TEXT,
-  updated_by TEXT
+  updated_by TEXT,
+
+  CONSTRAINT section_route_id_fk
+    FOREIGN KEY(route_id) 
+    REFERENCES route(id)
+    ON UPDATE CASCADE 
+    ON DELETE CASCADE
+    DEFERRABLE INITIALLY DEFERRED
 );
 
 -- initali the geometry can be NULL, geometry will be managed by trigger

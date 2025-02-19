@@ -55,7 +55,7 @@ BEGIN
 END;
 
 /*
-TRIGGERS OF section_segment
+TRIGGERS OF section_segment to maintain section geometries
 */
 CREATE TRIGGER section_segements_insert_edit 
 AFTER INSERT ON section_segment
@@ -99,4 +99,28 @@ BEGIN
 END;
 
 
--- AVOID TRIGGERS ON section, THEY CAN LEAD TO CIRCULAR TRIGGERS! 
+/*
+TRIGGERS OF section to maintain route geometries
+*/
+-- Be carefull with triggers on section and route, they can lead to circular triggers!
+CREATE TRIGGER section_insert_edit
+AFTER INSERT ON section
+WHEN (SELECT value FROM config WHERE key='execute_triggers')='true'
+BEGIN
+  UPDATE route SET geom = (
+    SELECT CastToMultiLinestring(st_union(section.geom))
+	  FROM section
+	  WHERE section.route_id = route.id)
+  WHERE id = NEW.route_id;
+END;
+
+CREATE TRIGGER section_update_edit
+AFTER UPDATE OF route_id, geom ON section
+WHEN (SELECT value FROM config WHERE key='execute_triggers')='true'
+BEGIN
+  UPDATE route SET geom = (
+    SELECT CastToMultiLinestring(st_union(section.geom))
+	  FROM section
+	  WHERE section.route_id = route.id)
+  WHERE id IN (NEW.route_id, OLD.route_id);
+END;
