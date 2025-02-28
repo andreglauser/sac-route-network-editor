@@ -47,8 +47,9 @@ CREATE TABLE section (
   fid INTEGER PRIMARY KEY AUTOINCREMENT,
   id TEXT NOT NULL UNIQUE,
   
-  route_id TEXT NOT NULL,
   name TEXT,
+  route_id TEXT NOT NULL,
+  position INTEGER NOT NULL,
   description TEXT,
   
   created_at TEXT,
