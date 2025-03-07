@@ -1,6 +1,5 @@
 @echo off
 call "C:\OSGeo4W\bin\o4w_env.bat"
-@echo on
 
 if exist build\route-editor.sqlite (
     del build\route-editor.sqlite
@@ -9,8 +8,10 @@ if exist build\route-editor.sqlite (
     echo Failed to delete build\route-editor.sqlite
     exit /b 1
 )
+@echo on
 
 sqlite3 build/route-editor.sqlite ".read  models/init_db.sql"
+sqlite3 build/route-editor.sqlite ".read  models/value_catalog.sql"
 sqlite3 build/route-editor.sqlite ".read  models/schema.sql"
 sqlite3 build/route-editor.sqlite ".read  models/route_manager.sql"
 

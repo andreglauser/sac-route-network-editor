@@ -8,6 +8,12 @@ CREATE TABLE route (
   
   name TEXT,
   description TEXT,
+  url TEXT,
+
+  -- relation to skitourenguru
+  sg_id INTEGER,
+  sg_type INTEGER,
+  sg_triage INTEGER,
   
   created_at TEXT,
   created_by TEXT,
@@ -26,6 +32,29 @@ CREATE TABLE segment (
   
   name TEXT,
   description TEXT,
+
+  data_source TEXT 
+    REFERENCES data_source(id) 
+    ON UPDATE CASCADE 
+    ON DELETE RESTRICT, 
+  direction TEXT 
+    REFERENCES direction(id) 
+    ON UPDATE CASCADE 
+    ON DELETE RESTRICT,
+  symbol_placement TEXT 
+    REFERENCES symbol_placement(id) 
+    ON UPDATE CASCADE 
+    ON DELETE RESTRICT,
+
+  -- not a value catalog because of the ease of use
+  -- m:n would not be practicle to add and query with qgis
+  snowshoe BOOLEAN,
+  skitour BOOLEAN,
+
+  increased_caution BOOLEAN, 
+  increased_caution_reason TEXT, 
+  climbed_on_foot BOOLEAN,
+
 
   -- used to track gis editing action (merge & split):
   -- if old_id IS NULL then it is a new segment
@@ -64,7 +93,7 @@ CREATE TABLE section (
     ON DELETE CASCADE
     DEFERRABLE INITIALLY DEFERRED
 );
-
+CREATE INDEX section_route_id_idx ON section(route_id);
 -- initali the geometry can be NULL, geometry will be managed by trigger
 SELECT AddGeometryColumn( 'section' , 'geom' , 2056 , 'MULTILINESTRING' , 'XYZ', 0);
 SELECT CreateSpatialIndex( 'section' , 'geom' );

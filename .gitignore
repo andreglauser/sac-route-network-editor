@@ -1,3 +1,4 @@
 temp/*
 build/*
-__pycache__/config.cpython-312.pyc
+imports/*
+__pycache__/**
