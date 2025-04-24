@@ -78,8 +78,10 @@ CREATE TABLE section (
   
   name TEXT,
   route_id TEXT NOT NULL,
-  position INTEGER NOT NULL,
+  position INTEGER,
   description TEXT,
+
+  edit_recaluclate_segments INTEGER DEFAULT 0,
   
   created_at TEXT,
   created_by TEXT,

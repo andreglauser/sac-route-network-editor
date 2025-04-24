@@ -124,3 +124,69 @@ BEGIN
 	  WHERE section.route_id = route.id)
   WHERE id IN (NEW.route_id, OLD.route_id);
 END;
+
+CREATE TRIGGER section_delete_edit
+AFTER DELETE ON section
+WHEN (SELECT value FROM config WHERE key='execute_triggers')='true'
+BEGIN
+  UPDATE route SET geom = (
+    SELECT CastToMultiLinestring(st_union(section.geom))
+	  FROM section
+	  WHERE section.route_id = route.id)
+  WHERE id IN (OLD.route_id);
+END;
+
+CREATE TRIGGER section_insert_segment_collector
+AFTER INSERT ON section
+WHEN (SELECT value FROM config WHERE key='execute_triggers')='true'
+BEGIN
+  INSERT INTO section_segment (
+    id,
+    section_id, 
+    segment_id, 
+    created_at, 
+    created_by) 
+  SELECT
+    CreateUUID() as id,
+    NEW.id as section_id,
+    seg.id as segment_id,
+    NEW.created_at, 
+    NEW.created_by
+  FROM segment seg 
+  WHERE st_intersects(NEW.geom, seg.geom) AND 
+    max(
+		-- instersection results in a linestring collect the number of vertices
+		coalesce(ST_NumPoints(st_intersection(NEW.geom, seg.geom)), 0),
+		-- instersection results in a multipoint collect the number of single points
+		coalesce(ST_NumGeometries(st_intersection(NEW.geom, seg.geom)), 0)
+	) > 1;
+END;
+
+CREATE TRIGGER section_update_segment_collector
+AFTER UPDATE OF edit_recaluclate_segments ON section
+WHEN (SELECT value FROM config WHERE key='execute_triggers')='true' AND NEW.edit_recaluclate_segments = 1
+BEGIN
+  DELETE FROM section_segment WHERE section_id IN (OLD.id, NEW.id);
+  INSERT INTO section_segment (
+    id,
+    section_id, 
+    segment_id, 
+    created_at, 
+    created_by) 
+  SELECT
+    CreateUUID() as id,
+    NEW.id as section_id,
+    seg.id as segment_id,
+    NEW.created_at, 
+    NEW.created_by
+  FROM segment seg 
+  WHERE st_intersects(NEW.geom, seg.geom) AND 
+    max(
+		-- instersection results in a linestring collect the number of vertices
+		coalesce(ST_NumPoints(st_intersection(NEW.geom, seg.geom)), 0),
+		-- instersection results in a multipoint collect the number of single points
+		coalesce(ST_NumGeometries(st_intersection(NEW.geom, seg.geom)), 0)
+	) > 1;
+  
+  UPDATE section SET edit_recaluclate_segments = 0 WHERE id IN (OLD.id, NEW.id);
+END;
