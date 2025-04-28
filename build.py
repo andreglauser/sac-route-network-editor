@@ -3,6 +3,7 @@ import sqlite3
 from pathlib import Path
 import subprocess
 import sys
+import shutil
 import logging.config
 
 
@@ -49,6 +50,10 @@ def main():
 
     conn.commit()
     conn.close()
+
+    logger.info("Create empty database template")
+    empty_db_path = db_path.with_name(db_path.name + ".empty")
+    shutil.copyfile(db_path, empty_db_path)
 
     if load_test_data:
         logger.info("Loading test data from the temporary dump")

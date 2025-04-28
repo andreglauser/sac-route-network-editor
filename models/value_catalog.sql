@@ -29,7 +29,7 @@ CREATE TABLE direction (
 INSERT INTO direction 
   (id, name, description, created_at, created_by) 
 VALUES 
-  ('ascent', 'Abfahrt', '', datetime('now'), 'Migration'),
+  ('ascent', 'Aufstieg', '', datetime('now'), 'Migration'),
   ('ascent_descent', 'Aufstief & Abfahrt', '', datetime('now'), 'Migration'),
   ('descent', 'Abfahrt', '', datetime('now'), 'Migration'),
   ('traverse', 'Traverse', '', datetime('now'), 'Migration'),
