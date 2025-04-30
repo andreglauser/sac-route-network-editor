@@ -18,4 +18,5 @@ CREATE TABLE config (
 
 INSERT INTO config (key, value, description, created_at, created_by) VALUES 
   ('version', '0.1', 'Version of the database schema', datetime('now'), 'system'),
-  ('execute_triggers', 'true', 'Enable or disable triggers', datetime('now'), 'system');
+  ('execute_triggers', 'true', 'Enable or disable triggers', datetime('now'), 'system'),
+  ('snap_vertices_count', 2, 'Min. count of vertices to collect segments when digitalizing routes', datetime('now'), 'system');
