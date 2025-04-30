@@ -10,8 +10,12 @@ CREATE TABLE route (
   description TEXT,
   url TEXT,
 
+  -- SAC needs custom ids for the mapping with sa2020. Can be null if not part of sa2020
+  -- Can be used to join with the export from the sa2020 API
+  sac_id INTEGER UNIQUE,
+
   -- relation to skitourenguru
-  sg_id INTEGER,
+  sg_id INTEGER UNIQUE,
   sg_type INTEGER,
   sg_triage INTEGER,
   
@@ -55,6 +59,14 @@ CREATE TABLE segment (
   increased_caution_reason TEXT, 
   climbed_on_foot BOOLEAN,
 
+  publish_sac BOOLEAN, --true/false
+  publish_swisstopo BOOLEAN, --true/false
+  publish_bafu BOOLEAN, --true/false
+  publish_not_allowed BOOLEAN, --true/false
+  publish_draft BOOLEAN, --true/false
+  -- Managed by default values on update. Defined by SAC
+  update_status INTEGER, -- -2,-1,1,2,3,4,5
+
 
   -- used to track gis editing action (merge & split):
   -- if old_id IS NULL then it is a new segment
@@ -80,6 +92,10 @@ CREATE TABLE section (
   route_id TEXT NOT NULL,
   position INTEGER,
   description TEXT,
+
+  -- SAC needs custom ids for the mapping with sa2020. Can be null if not part of sa2020
+  -- Can be used to join with the export from the sa2020 API
+  sac_id INTEGER UNIQUE,
 
   edit_recaluclate_segments INTEGER DEFAULT 0,
   
