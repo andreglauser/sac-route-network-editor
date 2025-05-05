@@ -15,7 +15,7 @@ BEGIN
   INSERT INTO section_segment (
     id,
     section_id, 
-    segment_id, 
+    segment_id,
     created_at, 
     created_by) 
     SELECT 
@@ -159,7 +159,7 @@ BEGIN
       coalesce(ST_NumPoints(st_intersection(NEW.geom, seg.geom)), 0),
       -- instersection results in a multipoint collect the number of single points
       coalesce(ST_NumGeometries(st_intersection(NEW.geom, seg.geom)), 0)
-	  ) > (SELECT value FROM config WHERE key='snap_vertices_count');
+	  ) >= (SELECT CAST("value" as INTEGER) FROM config WHERE "key"='snap_vertices_count');
 END;
 
 CREATE TRIGGER section_update_segment_collector
@@ -186,7 +186,7 @@ BEGIN
       coalesce(ST_NumPoints(st_intersection(NEW.geom, seg.geom)), 0),
       -- instersection results in a multipoint collect the number of single points
       coalesce(ST_NumGeometries(st_intersection(NEW.geom, seg.geom)), 0)
-	  ) > (SELECT value FROM config WHERE key='snap_vertices_count');
+	  ) >= (SELECT CAST("value" as INTEGER) FROM config WHERE "key"='snap_vertices_count');
   
   UPDATE section SET edit_recaluclate_segments = 0 WHERE id IN (OLD.id, NEW.id);
 END;
