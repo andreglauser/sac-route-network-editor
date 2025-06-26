@@ -6,16 +6,16 @@ import subprocess
 import sys
 from pathlib import Path
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
-db_path = Path("build/route-editor.sqlite")
-overwrite_db = True
+db_path: Path = Path("build/route-editor.sqlite")
+overwrite_db: bool = True
 
 # Load test data for development or creation of example projects
-load_test_data = True
-test_data_db = "test/data/route-editor.sqlite"
+load_test_data: bool = True
+test_data_db: str = "test/data/route-editor.sqlite"
 
-sql_scripts = [
+sql_scripts: list[str] = [
     "models/init_db.sql",
     "models/value_catalog.sql",
     "models/schema.sql",
@@ -23,9 +23,26 @@ sql_scripts = [
 ]
 
 
-def main():
+def main() -> None:
     logging.config.dictConfig(LOGGING_CONFIG)
 
+    handle_existing_db(db_path, overwrite_db)
+
+    logger.info("Applying the schema to the database")
+    apply_sql_scripts(db_path.as_posix(), sql_scripts)
+
+    logger.info("Create empty database template")
+    empty_db_path = db_path.with_name(db_path.name + ".empty")
+    shutil.copyfile(db_path, empty_db_path)
+
+    if load_test_data:
+        logger.info("Loading test data from the temporary dump")
+        copy_test_data(db_path.as_posix(), test_data_db)
+
+    logger.info(f"Successfully created {db_path}")
+
+
+def handle_existing_db(db_path: Path, overwrite_db: bool) -> None:
     if db_path.exists() and not overwrite_db:
         logger.error(
             f"Database {db_path} already exists. "
@@ -42,71 +59,46 @@ def main():
             logger.exception(f"Failed to delete {db_path}: {e}")
             sys.exit(1)
 
-    logger.info("Applying the schema to the database")
-    conn = sqlite3.connect(db_path)
-    conn.enable_load_extension(True)
-    cursor = conn.cursor()
+
+def apply_sql_scripts(db_path: str, sql_scripts: list[str]) -> None:
+    connection = sqlite3.connect(db_path)
+    connection.enable_load_extension(True)
+    cursor = connection.cursor()
 
     for script in sql_scripts:
         logger.info(f"Applying {script}")
         with open(script) as f:
             cursor.executescript(f.read())
 
-    conn.commit()
-    conn.close()
+    connection.commit()
+    connection.close()
 
-    logger.info("Create empty database template")
-    empty_db_path = db_path.with_name(db_path.name + ".empty")
-    shutil.copyfile(db_path, empty_db_path)
 
-    if load_test_data:
-        logger.info("Loading test data from the temporary dump")
-        commands = [
-            [
-                "ogr2ogr",
-                "-append",
-                "-update",
-                db_path.as_posix(),
-                test_data_db,
-                "data_source",
-            ],
-            [
-                "ogr2ogr",
-                "-append",
-                "-update",
-                "-nlt",
-                "PROMOTE_TO_MULTI",
-                db_path.as_posix(),
-                test_data_db,
-                "route",
-            ],
-            [
-                "ogr2ogr",
-                "-append",
-                "-update",
-                db_path.as_posix(),
-                test_data_db,
-                "segment",
-            ],
-            [
-                "ogr2ogr",
-                "-append",
-                "-update",
-                db_path.as_posix(),
-                test_data_db,
-                "section_segment",
-            ],
+def copy_test_data(target_db: str, source_db: str) -> None:
+    tables: list[str] = [
+        "data_source",
+        "route",
+        "segment",
+        "section",
+        "section_segment",
+    ]
+
+    for table in tables:
+        command = [
+            "ogr2ogr",
+            "-append",
+            "-update",
+            target_db,
+            source_db,
+            table,
         ]
 
-        for command in commands:
+        try:
             logger.info(f"Executing command: {' '.join(command)}")
-            try:
-                subprocess.run(command, check=True, capture_output=True)
-            except subprocess.CalledProcessError as e:
-                logger.error(f"Command failed: {e}")
-                sys.exit(1)
-
-    logger.info(f"Successfully created {db_path}")
+            subprocess.run(command, check=True, capture_output=True)
+        except subprocess.CalledProcessError as e:
+            logger.error(f"Command failed: {e}")
+            sys.exit(1)
 
 
 LOGGING_CONFIG = {
