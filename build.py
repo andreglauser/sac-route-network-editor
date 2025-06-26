@@ -1,17 +1,19 @@
 import logging
+import logging.config
+import shutil
 import sqlite3
-from pathlib import Path
 import subprocess
 import sys
-import shutil
-import logging.config
-
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
 db_path = Path("build/route-editor.sqlite")
 overwrite_db = True
-load_test_data = False
+
+# Load test data for development or creation of example projects
+load_test_data = True
+test_data_db = "test/data/route-editor.sqlite"
 
 sql_scripts = [
     "models/init_db.sql",
@@ -26,7 +28,9 @@ def main():
 
     if db_path.exists() and not overwrite_db:
         logger.error(
-            f"Database {db_path} already exists. Use overwrite=True to recreate it. Stopp building the database."
+            f"Database {db_path} already exists. "
+            "Use overwrite_db=True to recreate it. "
+            "Stopp building the database."
         )
         sys.exit(1)
 
@@ -45,7 +49,7 @@ def main():
 
     for script in sql_scripts:
         logger.info(f"Applying {script}")
-        with open(script, "r") as f:
+        with open(script) as f:
             cursor.executescript(f.read())
 
     conn.commit()
@@ -62,34 +66,42 @@ def main():
                 "ogr2ogr",
                 "-append",
                 "-update",
+                db_path.as_posix(),
+                test_data_db,
+                "data_source",
+            ],
+            [
+                "ogr2ogr",
+                "-append",
+                "-update",
                 "-nlt",
                 "PROMOTE_TO_MULTI",
                 db_path.as_posix(),
-                "temp/dump.gpkg",
-                "routes",
+                test_data_db,
+                "route",
             ],
             [
                 "ogr2ogr",
                 "-append",
                 "-update",
                 db_path.as_posix(),
-                "temp/dump.gpkg",
-                "segments",
+                test_data_db,
+                "segment",
             ],
             [
                 "ogr2ogr",
                 "-append",
                 "-update",
                 db_path.as_posix(),
-                "temp/dump.gpkg",
-                "route_segments",
+                test_data_db,
+                "section_segment",
             ],
         ]
 
         for command in commands:
             logger.info(f"Executing command: {' '.join(command)}")
             try:
-                cmd = subprocess.run(command, check=True, capture_output=True)
+                subprocess.run(command, check=True, capture_output=True)
             except subprocess.CalledProcessError as e:
                 logger.error(f"Command failed: {e}")
                 sys.exit(1)
@@ -101,7 +113,8 @@ LOGGING_CONFIG = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
-        "simple": {"format": "%(asctime)s - %(levelname)s - %(message)s"},
+        "simple": {"format": "%(levelname)s - %(message)s"},
+        "extended": {"format": "%(asctime)s - %(levelname)s - %(message)s"},
     },
     "handlers": {
         "console": {
