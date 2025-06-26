@@ -1,23 +1,10 @@
 {
-    "python.defaultInterpreterPath": "C:/OSGeo4W/bin/python-qgis-ltr.bat",
-    "python.autoComplete.extraPaths": [
-        "C:/OSGeo4W/apps/qgis-ltr/python",
-        "C:/OSGeo4W/apps/qgis-ltr/python/plugins",
-        "C:/OSGeo4W/apps/qgis-ltr/python/qgis",
-        "C:/OSGeo4W/apps/qgis-ltr/python/qgis/core",
-        "C:/OSGeo4W/apps/qgis-ltr/python/qgis/gui",
-        "C:/OSGeo4W/apps/qgis-ltr/python/qgis/utils",
-        "C:/OSGeo4W/apps/qgis-ltr/python/qgis/server",
-        "C:/OSGeo4W/apps/qgis-ltr/python/qgis/analysis"
-    ],
-    "python.analysis.extraPaths": [
-        "C:/OSGeo4W/apps/qgis-ltr/python",
-        "C:/OSGeo4W/apps/qgis-ltr/python/plugins",
-        "C:/OSGeo4W/apps/qgis-ltr/python/qgis",
-        "C:/OSGeo4W/apps/qgis-ltr/python/qgis/core",
-        "C:/OSGeo4W/apps/qgis-ltr/python/qgis/gui",
-        "C:/OSGeo4W/apps/qgis-ltr/python/qgis/utils",
-        "C:/OSGeo4W/apps/qgis-ltr/python/qgis/server",
-        "C:/OSGeo4W/apps/qgis-ltr/python/qgis/analysis"
-    ]
+    "python.defaultInterpreterPath": ".venv/Scripts/python.exe",
+    "editor.formatOnSave": true,
+    "[python]": {
+        "editor.defaultFormatter": "charliermarsh.ruff"
+    },
+    "terminal.integrated.env.windows": {
+        "PATH": "${env:PATH};C:\\OSGeo4W\\bin"
+    }
 }
