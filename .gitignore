@@ -1,4 +1,17 @@
 temp/*
-build/*
-imports/*
-__pycache__/**
+
+# QGIS project files
+**.qgs~
+
+# Database files
+route-editor/*.sqlite
+route-editor/*.sqlite.empty
+*.db-shm
+*.db-wal
+
+# Python
+.venv/
+*.py[codz]
+*$py.class
+.mypy_cache/
+.ruff_cache/

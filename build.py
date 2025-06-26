@@ -8,18 +8,18 @@ from pathlib import Path
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-db_path: Path = Path("build/route-editor.sqlite")
+db_path: Path = Path("route-editor/route-editor.sqlite")
 overwrite_db: bool = True
 
 # Load test data for development or creation of example projects
 load_test_data: bool = True
-test_data_db: str = "test/data/route-editor.sqlite"
+test_data_db: str = "tests/data/route-editor.sqlite"
 
 sql_scripts: list[str] = [
-    "models/init_db.sql",
-    "models/value_catalog.sql",
-    "models/schema.sql",
-    "models/route_manager.sql",
+    "database/init_db.sql",
+    "database/value_catalog.sql",
+    "database/schema.sql",
+    "database/route_manager.sql",
 ]
 
 
@@ -83,6 +83,9 @@ def copy_test_data(target_db: str, source_db: str) -> None:
         "section_segment",
     ]
 
+    logger.info("Disabling triggers in target database")
+    control_trigger_execution(target_db, False)
+
     for table in tables:
         command = [
             "ogr2ogr",
@@ -99,6 +102,19 @@ def copy_test_data(target_db: str, source_db: str) -> None:
         except subprocess.CalledProcessError as e:
             logger.error(f"Command failed: {e}")
             sys.exit(1)
+
+    logger.info("Reenabling triggers in target database")
+    control_trigger_execution(target_db, True)
+
+
+def control_trigger_execution(target_db: str, execution: bool) -> None:
+    value = "true" if execution else "false"
+    conn = sqlite3.connect(target_db)
+    try:
+        conn.execute(f"UPDATE config SET value='{value}' WHERE key='execute_triggers'")
+        conn.commit()
+    finally:
+        conn.close()
 
 
 LOGGING_CONFIG = {
