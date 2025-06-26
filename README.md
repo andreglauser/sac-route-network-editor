@@ -2,6 +2,8 @@
 
 Created for the [Swiss Alpine Club](https://www.sac-cas.ch) to simplify the creation and management of route geometries with [QGIS](https://qgis.org/). The business logic and aggregation of information is handled by triggers in the SpatiaLite database.
 
+How to use the project: Download the latest [release](https://github.com/andreglauser/sac-route-network-editor/releases) and open the route-editor.qgis with QGIS. The release contains some test-data. If a start with an empty database is desired: rename `route-editor.sqlite.empty` to `route-editor.sqlite` (remove .empty suffix).
+
 ## Overview of requirements
 
 Routes are composed based on one or multiple sections. A section is composed on one or multiple segments. Segments are building a network of unique paths. Therefore a segment can be part of multiple routes. The base of the network of segments could be data from a national mapping agency or OpenStreetMap.
