@@ -26,3 +26,13 @@ The **QGIS-Project** [route-editor/route-editor.qgs](route-editor/route-editor.q
 ### Add test-data
 
 Test-data of the area around Niesen based on [swissTLM3D, Bundesamt für Landestopografie swisstopo](https://www.swisstopo.admin.ch/de/landschaftsmodell-swisstlm3d) can be added with the `load_test_data` parameter in [build.py](build.py)
+
+### Compatibility with skitourenguru.ch
+
+Routes published at [https://github.com/skitourenguru/Routes](https://github.com/skitourenguru/Routes) can be imported into an empty database of and route-editor project with [.\helpers\import_skitourenguru\import_from_skitourenguru.cmd](helpers\import_skitourenguru\import_from_skitourenguru.cmd). Parameters in `import_from_skitourenguru.cmd` need to be adapted. See inline documentation for more Information. It is recommended to run the script with the `OSGeo4WShell` contained in every QGIS-Installation.
+
+#### Needs to be done in the near future:
+
+- [ ] Add name of start and endpoint to the route
+- [ ] Make the creation of routes simpler with a 2-level interface (route -> segments)
+- [ ] Export script to the skitourenguru geojson schema for publication to https://github.com/skitourenguru/Routes
