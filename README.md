@@ -33,6 +33,6 @@ Routes published at [https://github.com/skitourenguru/Routes](https://github.com
 
 #### Needs to be done in the near future:
 
-- [ ] Add name of start and endpoint to the route
-- [ ] Make the creation of routes simpler with a 2-level interface (route -> segments)
+- [x] Add name of start and endpoint to the route
+- [x] Make the creation of routes simpler with a 2-level interface (route -> segments)
 - [ ] Export script to the skitourenguru geojson schema for publication to https://github.com/skitourenguru/Routes

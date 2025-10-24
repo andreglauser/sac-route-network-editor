@@ -4,6 +4,31 @@
 
 
 /*
+TRIGGERS OF route to enable the possibility of 2 level route-creation
+*/
+
+CREATE TRIGGER route_insert_edit
+AFTER INSERT ON route
+WHEN (SELECT value FROM config WHERE key='execute_triggers')='true'
+BEGIN
+  -- Because existing editing help is triggered by section insertion
+  -- a route can completely created if the route has exactly one section
+  INSERT INTO section(
+    id,
+    route_id,
+    geom,
+    created_at,
+    created_by)
+  VALUES (
+    CreateUUID(),
+    NEW.id,
+    NEW.geom,
+    NEW.created_at, 
+    NEW.created_by
+  );
+END;
+
+/*
 TRIGGERS OF segment
 */
 DROP TRIGGER IF EXISTS segment_insert_edit;
