@@ -10,6 +10,9 @@ CREATE TABLE route (
   description TEXT,
   url TEXT,
 
+  start_name TEXT,
+  stop_name TEXT,
+
   -- SAC needs custom ids for the mapping with sa2020. Can be null if not part of sa2020
   -- Can be used to join with the export from the sa2020 API
   sac_id INTEGER UNIQUE,

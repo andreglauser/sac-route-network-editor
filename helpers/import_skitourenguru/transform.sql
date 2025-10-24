@@ -21,7 +21,9 @@ FROM import_segments;
 
 INSERT INTO route(
 	id, 
-	name, 
+	name,
+	start_name,
+	stop_name,
 	description, 
 	created_at, 
 	created_by, 
@@ -30,6 +32,8 @@ INSERT INTO route(
 SELECT
 	id AS id,
 	coalesce(start, '') || ' - '|| coalesce(stop, '') as name,
+	start AS start_name,
+	stop AS stop_name,
 	segments as description,
 	datetime('now') AS created_at, 
 	datetime('now') AS created_by, 
