@@ -3,6 +3,10 @@ SELECT load_extension('mod_spatialite');
 -- Avoids warning about unsafe use of geometry functions
 PRAGMA trusted_schema = 1;
 
+-- deactivate triggers to avoid computing geometries of sections and routes during the insert
+-- and avoid doubled sections in case of activated 2-level editing mode
+UPDATE config SET value='false' WHERE key='execute_triggers';
+
 INSERT INTO segment (
 	id,
 	created_at, 
@@ -60,6 +64,10 @@ SELECT
 	datetime('now') AS updated_at, 
 	datetime('now') AS updated_by
 FROM import_compositions;
+
+
+-- activate triggers again to compute geometries of sections and routes
+UPDATE config SET value='true' WHERE key='execute_triggers';
 
 -- Split list of segment ids into individual rows
 -- And insert into section_segment table
