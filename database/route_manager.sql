@@ -16,12 +16,14 @@ BEGIN
   INSERT INTO section(
     id,
     route_id,
+    position,
     geom,
     created_at,
     created_by)
   VALUES (
     CreateUUID(),
     NEW.id,
+    0,
     NEW.geom,
     NEW.created_at, 
     NEW.created_by
