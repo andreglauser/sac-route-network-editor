@@ -25,6 +25,7 @@ FROM import_segments;
 
 INSERT INTO route(
 	id, 
+	sg_id,
 	name,
 	start_name,
 	stop_name,
@@ -35,6 +36,7 @@ INSERT INTO route(
 	updated_by)
 SELECT
 	id AS id,
+	id AS sg_id,
 	coalesce(start, '') || ' - '|| coalesce(stop, '') as name,
 	start AS start_name,
 	stop AS stop_name,

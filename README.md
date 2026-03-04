@@ -29,7 +29,7 @@ Test-data of the area around Niesen based on [swissTLM3D, Bundesamt für Landest
 
 ### Compatibility with skitourenguru.ch
 
-Routes published at [https://github.com/skitourenguru/Routes](https://github.com/skitourenguru/Routes) can be imported into an empty database of and route-editor project with [.\helpers\import_skitourenguru\import_from_skitourenguru.cmd](helpers\import_skitourenguru\import_from_skitourenguru.cmd). Parameters in `import_from_skitourenguru.cmd` need to be adapted. See inline documentation for more Information. It is recommended to run the script with the `OSGeo4WShell` contained in every QGIS-Installation.
+Routes published at [https://github.com/skitourenguru/Routes](https://github.com/skitourenguru/Routes) can be imported into an empty database of and route-editor project with [.\helpers\import_skitourenguru\import_from_skitourenguru.cmd](./helpers/import_skitourenguru/import_from_skitourenguru.cmd). Parameters in `import_from_skitourenguru.cmd` need to be adapted. See inline documentation for more Information. It is recommended to run the script with the `OSGeo4WShell` contained in every QGIS-Installation.
 
 #### Needs to be done in the near future:
 
