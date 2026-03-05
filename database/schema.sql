@@ -29,8 +29,14 @@ CREATE TABLE route (
 );
 
 -- initali the geometry can be NULL, geometry will be managed by trigger
-SELECT AddGeometryColumn( 'route' , 'geom' , 2056 , 'MULTILINESTRING' , 'XYZ', 0);
-SELECT CreateSpatialIndex( 'route' , 'geom' );
+SELECT AddGeometryColumn(
+  'route',
+  'geom',
+  (SELECT CAST(value AS INTEGER) FROM config WHERE "key" = 'spatial_reference_system'), 
+  'MULTILINESTRING',
+  'XYZ',
+  0);
+SELECT CreateSpatialIndex( 'route', 'geom' );
 
 DROP TABLE IF EXISTS segment;
 CREATE TABLE segment (
@@ -83,8 +89,14 @@ CREATE TABLE segment (
   updated_by TEXT
 );
 
-SELECT AddGeometryColumn( 'segment' , 'geom' , 2056 , 'LINESTRING' , 'XYZ', 1);
-SELECT CreateSpatialIndex( 'segment' , 'geom' );
+SELECT AddGeometryColumn( 
+  'segment',
+  'geom',
+  (SELECT CAST(value AS INTEGER) FROM config WHERE "key" = 'spatial_reference_system'),
+  'LINESTRING',
+  'XYZ', 
+  1);
+SELECT CreateSpatialIndex( 'segment', 'geom' );
 
 DROP TABLE IF EXISTS section;
 CREATE TABLE section (
@@ -116,8 +128,14 @@ CREATE TABLE section (
 );
 CREATE INDEX section_route_id_idx ON section(route_id);
 -- initali the geometry can be NULL, geometry will be managed by trigger
-SELECT AddGeometryColumn( 'section' , 'geom' , 2056 , 'MULTILINESTRING' , 'XYZ', 0);
-SELECT CreateSpatialIndex( 'section' , 'geom' );
+SELECT AddGeometryColumn( 
+  'section',
+  'geom',
+  (SELECT CAST(value AS INTEGER) FROM config WHERE "key" = 'spatial_reference_system'),
+  'MULTILINESTRING',
+  'XYZ',
+  0);
+SELECT CreateSpatialIndex( 'section', 'geom' );
 
 DROP TABLE IF EXISTS section_segment;
 CREATE TABLE section_segment (

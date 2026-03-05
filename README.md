@@ -31,6 +31,8 @@ Test-data of the area around Niesen based on [swissTLM3D, Bundesamt für Landest
 
 Routes published at [https://github.com/skitourenguru/Routes](https://github.com/skitourenguru/Routes) can be imported into an empty database of and route-editor project with [.\helpers\import_skitourenguru\import_from_skitourenguru.cmd](./helpers/import_skitourenguru/import_from_skitourenguru.cmd). Parameters in `import_from_skitourenguru.cmd` need to be adapted. See inline documentation for more Information. It is recommended to run the script with the `OSGeo4WShell` contained in every QGIS-Installation.
 
+**Handling spatial reference:** When building the database for skitourenguru data: Modify the definition of the spatial reference in [database/init_db.sql](./database/init_db.sql). This SRID will be used for creating the geometry columns in the definded spatial reference. Changing the spatial reference later is error-prone.
+
 #### Needs to be done in the near future:
 
 - [x] Add name of start and endpoint to the route
