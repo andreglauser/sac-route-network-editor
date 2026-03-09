@@ -28,6 +28,61 @@ BEGIN
     NEW.created_at, 
     NEW.created_by
   );
+
+  UPDATE route
+  SET geom_modified = 0
+  WHERE id = NEW.id;
+END;
+
+CREATE TRIGGER route_update_geom_modified_by_user_update_assignments
+AFTER UPDATE OF geom, geom_modified ON route
+WHEN (SELECT value FROM config WHERE key='execute_triggers')='true'
+  -- only update section if geom is modified by user and only if there are 0 or 1 sections
+  -- if 2 or more sections exist, the mapping assignment would cause a lost of information
+  -- 2-level editing is only possible if there is exactly 1 section for a route.
+ AND NEW.geom_modified = 1 AND (SELECT count(*) FROM section WHERE route_id = NEW.id) IN (0, 1)
+BEGIN
+  -- CASE 1: If 1 section exists, update its geometry directly
+  -- Updating section_segment directly would trigger the collection of segments
+  -- But because of circular triggers the geometry of the route would be overwritten
+  UPDATE section 
+  SET geom_modified = 1,
+      geom = NEW.geom
+  WHERE route_id = NEW.id;
+
+  -- CASE 2: If 0 sections exist, insert a new one. 
+  INSERT INTO section(
+    id,
+    route_id,
+    position,
+    geom,
+    created_at,
+    created_by)
+  SELECT 
+    CreateUUID(),
+    NEW.id,
+    0,
+    NEW.geom,
+    NEW.created_at, 
+    NEW.created_by
+  WHERE (SELECT count(*) FROM section WHERE route_id = NEW.id) = 0;
+
+  UPDATE route
+  SET geom_modified = 0
+  WHERE id IN (NEW.id, OLD.id);
+
+END;
+
+CREATE TRIGGER route_update_geom_modified_by_user_no_update_assignments
+AFTER UPDATE OF geom_modified ON route
+WHEN (SELECT value FROM config WHERE key='execute_triggers')='true'
+  -- make sure that geom_modified is set back to false if there are 2 or more sections and
+  -- the recalculation of related sections is not triggered
+ AND NEW.geom_modified = 1 AND (SELECT count(*) FROM section WHERE route_id = NEW.id) NOT IN (0, 1)
+BEGIN
+  UPDATE route
+  SET geom_modified = 0
+  WHERE id IN (NEW.id, OLD.id);
 END;
 
 /*
@@ -139,17 +194,52 @@ BEGIN
 	  FROM section
 	  WHERE section.route_id = route.id)
   WHERE id = NEW.route_id;
+
+  UPDATE section
+  SET geom_modified = 0
+  WHERE id IN (NEW.id);
 END;
 
 CREATE TRIGGER section_update_edit
 AFTER UPDATE OF route_id, geom ON section
-WHEN (SELECT value FROM config WHERE key='execute_triggers')='true'
+WHEN (SELECT value FROM config WHERE key='execute_triggers')='true' AND NEW.geom_modified = 0
 BEGIN
   UPDATE route SET geom = (
     SELECT CastToMultiLinestring(st_union(section.geom))
 	  FROM section
 	  WHERE section.route_id = route.id)
   WHERE id IN (NEW.route_id, OLD.route_id);
+END;
+
+CREATE TRIGGER section_update_edit_by_user
+AFTER UPDATE OF route_id, geom, geom_modified ON section
+WHEN (SELECT value FROM config WHERE key='execute_triggers')='true' AND NEW.geom_modified = 1
+BEGIN
+  DELETE FROM section_segment WHERE section_id IN (OLD.id, NEW.id);
+  INSERT INTO section_segment (
+    id,
+    section_id, 
+    segment_id, 
+    created_at, 
+    created_by) 
+  SELECT
+    CreateUUID() as id,
+    NEW.id as section_id,
+    seg.id as segment_id,
+    NEW.created_at, 
+    NEW.created_by
+  FROM segment seg 
+  WHERE st_intersects(NEW.geom, seg.geom) AND 
+    max(
+      -- instersection results in a linestring collect the number of vertices
+      coalesce(ST_NumPoints(st_intersection(NEW.geom, seg.geom)), 0),
+      -- instersection results in a multipoint collect the number of single points
+      coalesce(ST_NumGeometries(st_intersection(NEW.geom, seg.geom)), 0)
+	  ) >= (SELECT CAST("value" as INTEGER) FROM config WHERE "key"='snap_vertices_count');
+  
+  UPDATE section
+  SET geom_modified = 0
+  WHERE id IN (OLD.id, NEW.id);
 END;
 
 CREATE TRIGGER section_delete_edit

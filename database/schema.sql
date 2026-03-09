@@ -21,6 +21,10 @@ CREATE TABLE route (
   sg_id INTEGER UNIQUE,
   sg_type INTEGER,
   sg_triage INTEGER,
+
+  -- tracks if the geometry has been modified by a user within QGIS to avoid false execution of triggers.
+  -- toggled by a geometryChanged signal defined in QGIS Project Macros and reset by the route insert and update trigger.
+  geom_modified BOOLEAN DEFAULT FALSE,
   
   created_at TEXT,
   created_by TEXT,
@@ -113,6 +117,10 @@ CREATE TABLE section (
   sac_id INTEGER UNIQUE,
 
   edit_recaluclate_segments INTEGER DEFAULT 0,
+
+  -- tracks if the geometry has been modified by a user within QGIS to avoid false execution of triggers.
+  -- toggled by update_route trigger and reset by the section insert and update trigger.
+  geom_modified BOOLEAN DEFAULT FALSE,
   
   created_at TEXT,
   created_by TEXT,
