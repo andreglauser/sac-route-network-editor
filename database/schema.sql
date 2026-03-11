@@ -10,6 +10,9 @@ CREATE TABLE route (
   description TEXT,
   url TEXT,
 
+  start_name TEXT,
+  stop_name TEXT,
+
   -- SAC needs custom ids for the mapping with sa2020. Can be null if not part of sa2020
   -- Can be used to join with the export from the sa2020 API
   sac_id INTEGER UNIQUE,
@@ -18,6 +21,10 @@ CREATE TABLE route (
   sg_id INTEGER UNIQUE,
   sg_type INTEGER,
   sg_triage INTEGER,
+
+  -- tracks if the geometry has been modified by a user within QGIS to avoid false execution of triggers.
+  -- toggled by a geometryChanged signal defined in QGIS Project Macros and reset by the route insert and update trigger.
+  geom_modified BOOLEAN DEFAULT FALSE,
   
   created_at TEXT,
   created_by TEXT,
@@ -26,8 +33,14 @@ CREATE TABLE route (
 );
 
 -- initali the geometry can be NULL, geometry will be managed by trigger
-SELECT AddGeometryColumn( 'route' , 'geom' , 2056 , 'MULTILINESTRING' , 'XYZ', 0);
-SELECT CreateSpatialIndex( 'route' , 'geom' );
+SELECT AddGeometryColumn(
+  'route',
+  'geom',
+  (SELECT CAST(value AS INTEGER) FROM config WHERE "key" = 'spatial_reference_system'), 
+  'MULTILINESTRING',
+  'XYZ',
+  0);
+SELECT CreateSpatialIndex( 'route', 'geom' );
 
 DROP TABLE IF EXISTS segment;
 CREATE TABLE segment (
@@ -80,8 +93,14 @@ CREATE TABLE segment (
   updated_by TEXT
 );
 
-SELECT AddGeometryColumn( 'segment' , 'geom' , 2056 , 'LINESTRING' , 'XYZ', 1);
-SELECT CreateSpatialIndex( 'segment' , 'geom' );
+SELECT AddGeometryColumn( 
+  'segment',
+  'geom',
+  (SELECT CAST(value AS INTEGER) FROM config WHERE "key" = 'spatial_reference_system'),
+  'LINESTRING',
+  'XYZ', 
+  1);
+SELECT CreateSpatialIndex( 'segment', 'geom' );
 
 DROP TABLE IF EXISTS section;
 CREATE TABLE section (
@@ -98,6 +117,10 @@ CREATE TABLE section (
   sac_id INTEGER UNIQUE,
 
   edit_recaluclate_segments INTEGER DEFAULT 0,
+
+  -- tracks if the geometry has been modified by a user within QGIS to avoid false execution of triggers.
+  -- toggled by update_route trigger and reset by the section insert and update trigger.
+  geom_modified BOOLEAN DEFAULT FALSE,
   
   created_at TEXT,
   created_by TEXT,
@@ -113,8 +136,14 @@ CREATE TABLE section (
 );
 CREATE INDEX section_route_id_idx ON section(route_id);
 -- initali the geometry can be NULL, geometry will be managed by trigger
-SELECT AddGeometryColumn( 'section' , 'geom' , 2056 , 'MULTILINESTRING' , 'XYZ', 0);
-SELECT CreateSpatialIndex( 'section' , 'geom' );
+SELECT AddGeometryColumn( 
+  'section',
+  'geom',
+  (SELECT CAST(value AS INTEGER) FROM config WHERE "key" = 'spatial_reference_system'),
+  'MULTILINESTRING',
+  'XYZ',
+  0);
+SELECT CreateSpatialIndex( 'section', 'geom' );
 
 DROP TABLE IF EXISTS section_segment;
 CREATE TABLE section_segment (

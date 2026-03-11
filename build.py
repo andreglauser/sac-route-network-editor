@@ -20,6 +20,8 @@ sql_scripts: list[str] = [
     "database/value_catalog.sql",
     "database/schema.sql",
     "database/route_manager.sql",
+    "database/views/segments_all.sql",
+    "database/views/skitourenguru.sql",
 ]
 
 
